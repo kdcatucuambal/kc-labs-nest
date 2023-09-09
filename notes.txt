@@ -1,0 +1,6 @@
+Node version: 18.17.0
+Nest version cli: 10.1.11
+
+
+Load database
+docker-compose up -d
