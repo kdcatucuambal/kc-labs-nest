@@ -1,0 +1,6 @@
+packaged.yaml
+parameters.json
+out.yaml
+.stack/
+.idea/
+.aws-sam/

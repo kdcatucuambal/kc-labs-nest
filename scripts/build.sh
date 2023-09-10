@@ -3,7 +3,7 @@
 CURRENT_BRANCH=$(git branch --show-current)
 
 #check if config.json exists
-if [ ! -f configs/$CURRENT_BRANCH.json ]; then
+if [ ! -f config/$CURRENT_BRANCH.json ]; then
     echo "ERROR: config.json not found for branch $CURRENT_BRANCH!"
     exit 1
 fi
@@ -16,7 +16,7 @@ fi
 
 #delete all files in .stack folder
 rm -rf .stack/*
-cp configs/$CURRENT_BRANCH.json .stack/config.json
+cp config/$CURRENT_BRANCH.json .stack/config.json
 
  
 echo "Inject values.."
@@ -77,11 +77,8 @@ if [ ! -f Dockerfile ]; then
 fi
 
 
-echo "[EXEC] docker build -t $PROJECT_NAME:$HASH_COMMIT --build-arg PORT=$MICROSERVICE_PORT ."
-docker build -t $PROJECT_NAME:$HASH_COMMIT --build-arg PORT=$MICROSERVICE_PORT .
-
-echo "[EXEC] docker tag $PROJECT_NAME:$HASH_COMMIT $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com$REPO_NAME:$DOCKER_TAG"
-docker tag $PROJECT_NAME:$HASH_COMMIT $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com$REPO_NAME:$DOCKER_TAG
+echo "[EXEC] docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com$REPO_NAME:$DOCKER_TAG --build-arg PORT=$MICROSERVICE_PORT ."
+docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com$REPO_NAME:$DOCKER_TAG --build-arg PORT=$MICROSERVICE_PORT .
 
 echo "ECR Login.."
 echo "[EXEC] aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
