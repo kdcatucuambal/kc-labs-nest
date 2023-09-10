@@ -52,8 +52,4 @@ export class ProductsController {
     return this.productsService.remove(id);
   }
 
-  @Get('db/health')
-  health(){
-    return "OK";
-  }
 }
