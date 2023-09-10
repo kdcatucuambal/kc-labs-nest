@@ -1,0 +1,245 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  task-service for kc-labs-nest-service
+
+
+Parameters:
+  EnvironmentId:
+    Type: String
+    Description: Environment ID
+
+  EnvironmentBase:
+    Type: String
+    Description: Environment base
+
+  MicroserviceName:
+    Type: String
+    Description: Microservice name
+
+  LogRetentionInDays:
+    Type: Number
+    Description: Log retention in days
+
+  TaskDefinitionCpu:
+    Type: Number
+    Description: Task definition CPU
+
+  TaskDefinitionMemory:
+    Type: Number
+    Description: Task definition memory
+
+  DockerEcrRepositoryUrl:
+    Type: String
+    Description: Docker ECR repository URL
+
+  DockerTag:
+    Type: String
+    Description: Docker tag
+
+  MicroservicePort:
+    Type: String
+    Description: Microservice port
+
+  ClusterECSId:
+    Type: String
+    Description: Cluster ECS ID
+
+  DesiredCount:
+    Type: Number
+    Description: Desired count
+
+  AssignPublicIp:
+    Type: String
+    Description: Assign public IP
+    Default: ENABLED
+    AllowedValues:
+      - ENABLED
+      - DISABLED
+
+  PublicLoadBalancer:
+    Type: String
+    Description: Public load balancer
+
+  SubnetsIDs:
+    Type: CommaDelimitedList
+    Default: "subnet-0e7120a4e38576eb7,subnet-0787536bd3d719a34"
+
+  SecurityGroupsIDs:
+    Type: CommaDelimitedList
+    Default: "sg-0cbe4980b48df6f29"
+
+  HealthCheckUrl:
+    Type: String
+    Description: Health check URL
+
+  ProductsTableDynamoDB:
+    Type: String
+    Description: Products table DynamoDB
+
+
+Conditions:
+  IsPublicLoadBalancer: !Not [!Equals [!Ref PublicLoadBalancer, ""]]
+
+Resources:
+  TaskIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${EnvironmentId}-${MicroserviceName}-task-role"
+      Path: /
+      AssumeRolePolicyDocument: |
+        {
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Service": [ "ecs-tasks.amazonaws.com" ]},
+            "Action": [ "sts:AssumeRole" ]
+          }]
+        }
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+        - arn:aws:iam::aws:policy/AWSAppMeshEnvoyAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+        - arn:aws:iam::aws:policy/AmazonEventBridgeFullAccess
+
+  TaskExecutionIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${EnvironmentId}-${MicroserviceName}-task-execution-role"
+      Path: /
+      AssumeRolePolicyDocument: |
+        {
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Service": [ "ecs-tasks.amazonaws.com" ]},
+            "Action": [ "sts:AssumeRole" ]
+          }]
+        }
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+        - arn:aws:iam::aws:policy/AmazonEventBridgeFullAccess
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/${EnvironmentId}/${MicroserviceName}-task"
+      RetentionInDays: !Ref LogRetentionInDays
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub "${EnvironmentId}-${MicroserviceName}-task"
+      Cpu: !Ref TaskDefinitionCpu
+      Memory: !Ref TaskDefinitionMemory
+      TaskRoleArn: !Ref TaskIamRole
+      ExecutionRoleArn: !GetAtt TaskExecutionIamRole.Arn
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ContainerDefinitions:
+        - Name: !Sub "${EnvironmentId}-${MicroserviceName}-container"
+          Image: !Sub "${DockerEcrRepositoryUrl}:${DockerTag}"
+          Environment:
+            - Name: ENVIRONMENT_ID
+              Value: !Ref EnvironmentId
+            - Name: MICROSERVICE_NAME
+              Value: !Ref MicroserviceName
+            - Name: PORT
+              Value: !Ref MicroservicePort
+            - Name: PRODUCTS_TABLE
+              Value: !Ref ProductsTableDynamoDB
+          PortMappings:
+            - ContainerPort: !Ref MicroservicePort
+          LogConfiguration:
+            LogDriver: "awslogs"
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Sub "${EnvironmentId}-${MicroserviceName}-container"
+          HealthCheck:
+            Command:
+              - "CMD-SHELL"
+              - !Sub "curl -f http://localhost:${MicroservicePort}${HealthCheckUrl} || exit 1"
+            Interval: 10 #this is the time between health checks
+            Retries: 3 #this is the number of times to retry before considering the container unhealthy
+            Timeout: 5 #this is the time to wait for a response
+            StartPeriod: 60 #this is the time to wait before starting the healthcheck
+
+  EcsService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Sub "${EnvironmentId}-${MicroserviceName}-service"
+      Cluster: !Ref ClusterECSId
+      TaskDefinition: !Ref TaskDefinition
+      DesiredCount: !Ref DesiredCount
+      LaunchType: FARGATE
+      PropagateTags: SERVICE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: !Ref AssignPublicIp
+          Subnets: !Ref SubnetsIDs
+          SecurityGroups: !Ref SecurityGroupsIDs
+      LoadBalancers: !If
+        - IsPublicLoadBalancer
+        - - ContainerName: !Sub "${EnvironmentId}-${MicroserviceName}-container"
+            ContainerPort: !Ref MicroservicePort
+            TargetGroupArn: !Ref TargetGroup
+        - !Ref AWS::NoValue
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: IsPublicLoadBalancer
+    Properties:
+      HealthCheckIntervalSeconds: 30 #this is the time between health checks
+      HealthCheckPath: !Ref HealthCheckUrl
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 10 #this is the time to wait for a response
+      HealthyThresholdCount: 5 #this is the number of times to retry before considering the container healthy
+      TargetType: ip
+      Name : !Sub "${EnvironmentId}-${MicroserviceName}-tg"
+      Port: !Ref MicroservicePort
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5 #this is the number of times to retry before considering the container unhealthy
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 30
+      VpcId:
+        Fn::ImportValue: !Sub "${EnvironmentBase}:VpcId"
+
+  PublicLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: IsPublicLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: "forward"
+      LoadBalancerArn: !Ref PublicLoadBalancer
+      Port: !Ref  MicroservicePort
+      Protocol: HTTP
+
+Outputs:
+  TaskIamRole:
+    Description: Task IAM role
+    Value: !Ref TaskIamRole
+
+  TaskExecutionIamRole:
+    Description: Task execution IAM role
+    Value: !Ref TaskExecutionIamRole
+
+  LogGroup:
+    Description: Log group
+    Value: !Ref LogGroup
+
+  TaskDefinition:
+    Description: Task definition
+    Value: !Ref TaskDefinition
+
+  ServiceECS:
+    Description: Service ECS
+    Value: !Ref EcsService
