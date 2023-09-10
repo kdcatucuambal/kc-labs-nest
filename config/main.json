@@ -91,7 +91,7 @@
           },
           {
             "ParameterKey": "HealthCheckUrl",
-            "ParameterValue": "/api/labs/v1/health/db"
+            "ParameterValue": "/api/labs/v1/products/db/health"
           },
           {
             "ParameterKey": "PublicLoadBalancer",
