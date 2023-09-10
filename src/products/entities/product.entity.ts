@@ -79,7 +79,7 @@ export class Product {
     @ManyToOne(
         () => User,
         user => user.product,
-        {eager: true}
+        {eager: false}
     )
     @JoinColumn({name: 'prod_user_id'})
     public user: User;
