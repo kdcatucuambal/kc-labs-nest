@@ -1,0 +1,19 @@
+# Ignore node_modules since it will be installed in the Dockerfile
+node_modules
+
+# Ignore any development or build-related files
+*.log
+*.tsbuildinfo
+# *.env
+*.test.ts
+*.spec.ts
+coverage
+dist
+tmp
+
+# Ignore any version control directories
+.git
+.gitignore
+
+# Ignore any Nest.js-specific files
+nest-cli.json
