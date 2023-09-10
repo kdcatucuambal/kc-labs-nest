@@ -4,7 +4,7 @@ node_modules
 # Ignore any development or build-related files
 *.log
 *.tsbuildinfo
-# *.env
+*.env
 *.test.ts
 *.spec.ts
 coverage

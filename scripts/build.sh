@@ -37,7 +37,8 @@ MICROSERVICE_PORT=$(jq -r '.pipeline.deploy.parameters[] | select(.ParameterKey=
 REPO_NAME=$(jq -r '.pipeline.docker."name"' config.json)
 HASH_COMMIT=$(git rev-parse --short HEAD)
 PROJECT_NAME=$ENVIRONMENT_ID-$MICROSERVICE_NAME-service
-export DOCKER_TAG=$PROJECT_NAME.$HASH_COMMIT
+UNIQUE_DATE=$(date +"%Y%m%d%H%M%S")
+export DOCKER_TAG=$PROJECT_NAME.$HASH_COMMIT.$UNIQUE_DATE
 
 
 echo "PATH_SERVICE: $PATH_SERVICE"

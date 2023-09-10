@@ -104,6 +104,18 @@
           {
             "ParameterKey": "ProductsTableDynamoDB",
             "ParameterValue": "dev1-labs-products"
+          },
+          {
+            "ParameterKey": "MicroserviceSecretArn",
+            "ParameterValue": "arn:aws:secretsmanager:us-east-1:818802851925:secret:dev1/credentials/database-ExV4D6"
+          },
+          {
+            "ParameterKey": "HostApi",
+            "ParameterValue": "http://localhost:3000/api/labs/v1"
+          },
+          {
+            "ParameterKey": "ApiPrefix",
+            "ParameterValue": "/api/labs/v1"
           }
         ]
       }

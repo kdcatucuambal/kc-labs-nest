@@ -77,6 +77,17 @@ Parameters:
     Type: String
     Description: Products table DynamoDB
 
+  MicroserviceSecretArn:
+    Type: String
+    Description: Microservice secret ARN
+
+  HostApi:
+    Type: String
+    Description: Host API
+
+  ApiPrefix:
+    Type: String
+    Description: API prefix
 
 Conditions:
   IsPublicLoadBalancer: !Not [!Equals [!Ref PublicLoadBalancer, ""]]
@@ -154,6 +165,25 @@ Resources:
               Value: !Ref MicroservicePort
             - Name: PRODUCTS_TABLE
               Value: !Ref ProductsTableDynamoDB
+            - Name: NO_COLOR
+              Value: true
+            - Name: HOST_API
+              Value: !Ref HostApi
+            - Name: API_PREFIX
+              Value: !Ref ApiPrefix
+          Secrets:
+            - Name: JWT_SECRET
+              ValueFrom: !Sub "${MicroserviceSecretArn}:jwtSecret::"
+            - Name: DB_USERNAME
+              ValueFrom: !Sub "${MicroserviceSecretArn}:username::"
+            - Name: DB_NAME
+              ValueFrom: !Sub "${MicroserviceSecretArn}:dbNameNest::"
+            - Name: DB_HOST
+              ValueFrom: !Sub "${MicroserviceSecretArn}:endpoint::"
+            - Name: DB_PORT
+              ValueFrom: !Sub "${MicroserviceSecretArn}:port::"
+            - Name: DB_PASSWORD
+              ValueFrom: !Sub "${MicroserviceSecretArn}:password::"
           PortMappings:
             - ContainerPort: !Ref MicroservicePort
           LogConfiguration:

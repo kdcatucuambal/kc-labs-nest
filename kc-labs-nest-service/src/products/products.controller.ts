@@ -22,7 +22,7 @@ export class ProductsController {
   create(
     @Body() createProductDto: CreateProductDto,
     @GetUser() user: User
-    ) {
+  ) {
     return this.productsService.create(createProductDto, user);
   }
 
@@ -39,10 +39,10 @@ export class ProductsController {
   @Patch(':id')
   @Auth(ValidRoles.admin)
   update(
-    @Param('id') id: string, 
+    @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
     @GetUser() user: User
-    ) {
+  ) {
     return this.productsService.update(id, updateProductDto, user);
   }
 
@@ -51,5 +51,5 @@ export class ProductsController {
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
   }
-
+  
 }
