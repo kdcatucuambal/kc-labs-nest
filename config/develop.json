@@ -1,0 +1,123 @@
+{
+    "parameters": {
+      "LogRetentionDays": "7",
+      "AllowedDomains": "*",
+      "AwsAccountId": "818802851925",
+      "AwsRegion": "us-east-1",
+      "Module": "labs-nest",
+      "ApiGatewayType": "REGIONAL",
+      "VpcEndpointId": "vpce-0f4d2da42dbff81e8",
+      "EnvironmentId": "dev1",
+      "EnvironmentBase": "dev1",
+      "tag": "VERSION FROM CONFIG"
+    },
+    "pipeline": {
+      "project": {
+        "project-key": "kc-labs-nest-service",
+        "path-service": "kc-labs-nest-service",
+        "backend-branch": "develop"
+      },
+      "docker": {
+        "name": "/dev1/kec/nest",
+        "description": "Labs Nest Service",
+        "license": "Propietary",
+        "vendor": "kc",
+        "homepage": "kcatucuamba.com",
+        "author": {
+          "name": "kcatucuamba",
+          "email": "catucuambakevin@gmail.com"
+        },
+        "reference": "",
+        "path_container": "",
+        "microservice_secret": ""
+      },
+      "deploy": {
+        "sam-deploy-enable": "true",
+        "stack-name": "${EnvironmentId}-${Module}-service",
+        "s3-bucket": "${EnvironmentBase}-kc-labs-service",
+        "aws-config-bucket": "N/A",
+        "prefix": "${EnvironmentId}",
+        "aws-default-region": "${AwsRegion}",
+        "capabilities": "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM",
+        "non-confirm-change-set": "true",
+        "parameters": [
+          {
+            "ParameterKey": "EnvironmentId",
+            "ParameterValue": "${EnvironmentId}"
+          },
+          {
+            "ParameterKey": "MicroserviceName",
+            "ParameterValue": "${Module}"
+          },
+          {
+            "ParameterKey": "LogRetentionInDays",
+            "ParameterValue": "${LogRetentionDays}"
+          },
+          {
+            "ParameterKey": "TaskDefinitionCpu",
+            "ParameterValue": "512"
+          },
+          {
+            "ParameterKey": "TaskDefinitionMemory",
+            "ParameterValue": "1024"
+          },
+          {
+            "ParameterKey": "DockerEcrRepositoryUrl",
+            "ParameterValue": "818802851925.dkr.ecr.us-east-1.amazonaws.com/${EnvironmentBase}/kec/nest"
+          },
+          {
+            "ParameterKey": "MicroservicePort",
+            "ParameterValue": "8080"
+          },
+          {
+            "ParameterKey": "ClusterECSId",
+            "ParameterValue": "arn:aws:ecs:us-east-1:818802851925:cluster/${EnvironmentBase}-cluster-fargate"
+          },
+          {
+            "ParameterKey": "DesiredCount",
+            "ParameterValue": "1"
+          },
+          {
+            "ParameterKey": "AssignPublicIp",
+            "ParameterValue": "ENABLED"
+          },
+          {
+            "ParameterKey": "SubnetsIDs",
+            "ParameterValue": "subnet-0d49e4a0bb63cfb65,subnet-0abe251e73f7fbd29"
+          },
+          {
+            "ParameterKey": "SecurityGroupsIDs",
+            "ParameterValue": "sg-020d7de607566bd60"
+          },
+          {
+            "ParameterKey": "HealthCheckUrl",
+            "ParameterValue": "/api/labs/v1/health/db"
+          },
+          {
+            "ParameterKey": "PublicLoadBalancer",
+            "ParameterValue": "arn:aws:elasticloadbalancing:us-east-1:818802851925:loadbalancer/app/dev1-labs-public-load-balancer/225ca2c68b118258"
+          },
+          {
+            "ParameterKey": "EnvironmentBase",
+            "ParameterValue": "${EnvironmentBase}"
+          },
+          {
+            "ParameterKey": "ProductsTableDynamoDB",
+            "ParameterValue": "dev1-labs-products"
+          },
+          {
+            "ParameterKey": "MicroserviceSecretArn",
+            "ParameterValue": "arn:aws:secretsmanager:us-east-1:818802851925:secret:dev1/credentials/database-ExV4D6"
+          },
+          {
+            "ParameterKey": "HostApi",
+            "ParameterValue": "http://localhost:3000/api/labs/v1"
+          },
+          {
+            "ParameterKey": "ApiPrefix",
+            "ParameterValue": "/api/labs/v1"
+          }
+        ]
+      }
+    }
+  }
