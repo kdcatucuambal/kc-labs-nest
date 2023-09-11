@@ -43,7 +43,7 @@ if ! aws cloudformation describe-stacks --region $DEPLOY_AWS_DEFAULT_REGION --st
 else
     echo "Stack $DEPLOY_STACK_NAME exists, updating ..."
     jq -r '.pipeline.deploy."parameters"' config.json > parameters.json
-        json=$(cat parameters.json)
+    json=$(cat parameters.json)
     new_object='{"ParameterKey": "DockerTag", "ParameterValue": "'$DOCKER_TAG'"}'
     updated_json=$(echo "$json" | jq '. + ['"$new_object"']')
     echo "$updated_json" > parameters.json
