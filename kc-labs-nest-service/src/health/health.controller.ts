@@ -18,4 +18,9 @@ export class HealthController {
         ]);
     }
 
+    @Get('info')
+    hello(){
+        return 'Hello, this is a health check endpoint.';
+    }
+
 }
