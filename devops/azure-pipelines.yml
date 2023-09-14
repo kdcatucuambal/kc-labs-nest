@@ -22,7 +22,7 @@ resources:
       ref: 'dev1'
 
 stages:
-  - template: templates/stages/microservice.yml@templates
+  - template: templates/stages/microserviceStage.yml@templates
     parameters:
       PROJECT_KEY: ${{ parameters.PROJECT_KEY }}
       DOCKER_IMAGE: ${{ parameters.DOCKER_IMAGE }}
