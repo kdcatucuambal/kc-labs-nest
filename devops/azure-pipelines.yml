@@ -4,7 +4,7 @@ parameters:
     default: 'kc-labs-nest-service'
   - name: DOCKER_IMAGE
     type: string
-    default: 'kevdev105030/osnebula:20230912144425'
+    default: 'kevdev105030/osnebula:20230917210615'
   - name: PROJECT_TYPE
     type: string
     default: 'node_container'
@@ -14,12 +14,17 @@ pool: 'Azure Pipelines'
 variables:
   - group: GENERAL_DEVOPS
 
+trigger:
+    branches:
+      include:
+        - develop
+
 resources:
   repositories:
     - repository: templates
       type: git
       name: 'kc-cloud-devops'
-      ref: 'dev1'
+      ref: 'refs/tags/v0.0.1'
 
 stages:
   - template: templates/stages/microserviceStage.yml@templates
